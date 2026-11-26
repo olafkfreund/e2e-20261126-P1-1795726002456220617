@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import re
 import sys
@@ -81,6 +82,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def _read_text(path: str | None) -> str:
     """Return the text of *path*, or of stdin when *path* is None or '-'."""
     if path is None or path == "-":
+        if isinstance(sys.stdin, io.TextIOWrapper):
+            sys.stdin.reconfigure(encoding="utf-8")
         return sys.stdin.read()
     with open(path, encoding="utf-8") as handle:
         return handle.read()
@@ -98,7 +101,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         text = _read_text(args.path)
     except (OSError, UnicodeDecodeError) as exc:
-        sys.stderr.write(f"wordfreq: error: cannot read {args.path or 'stdin'}: {exc}\n")
+        sys.stderr.write(
+            f"wordfreq: error: cannot read {args.path or 'stdin'}: {exc}\n"
+        )
         return 2
 
     try:
